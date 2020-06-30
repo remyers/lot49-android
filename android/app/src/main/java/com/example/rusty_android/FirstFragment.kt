@@ -31,7 +31,7 @@ class FirstFragment : Fragment() {
                 it?.text = hello("Richard")
             }
 
-            view.findViewById<Button>(R.id.button_first).setOnClickListener {
+            view.findViewById<Button>(R.id.random_button).setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
         }
     }
