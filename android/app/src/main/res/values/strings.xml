@@ -2,13 +2,22 @@
     <string name="app_name">rusty-android</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="previous">Previous</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="contacts_fragment_label">Contacts</string>
+    <string name="chat_fragment_label">Chat</string>
+    <string name="contacts">Contacts</string>
     <string name="toast_button_text">Toast</string>
-    <string name="random_button_text">Random</string>
-    <string name="count_button_text">Count</string>
+    <string name="chat_button_text">Chat</string>
+    <string name="send_message_description">Send Message</string>
+    <string name="recently">seen recently</string>
+    <string name="one_hour_ago"><![CDATA[seen < 1 hour ago]]></string>
+    <string name="one_day_ago"><![CDATA[seen < 1 day ago]]></string>
+    <string name="more_than_one_day_ago"><![CDATA[seen > one day ago]]></string>
+    <string name="never">never</string>
+    <string name="title"><![CDATA[<h3>HERE IS YOUR CONTACT DATA</h3>]]></string>
+    <string name="name">![CDATA[<b>Name:</b>]]</string>
+    <string name="connect">connect</string>
+    <string name="stop">stop</string>
+    <string name="clear">clear</string>
+    <string name="cleared_message">Wiping out the database!</string>
+    <string name="header_text">Mesh Peers</string>
 </resources>
