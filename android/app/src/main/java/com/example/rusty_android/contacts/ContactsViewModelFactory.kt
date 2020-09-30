@@ -3,7 +3,6 @@ package com.example.rusty_android.contacts
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.rusty_android.contacts.ContactsViewModel
 import com.example.rusty_android.database.ContactDatabaseDao
 
 /**

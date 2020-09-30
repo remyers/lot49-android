@@ -41,7 +41,8 @@
             android:text="TextView"
             android:textColor="@android:color/black"
             android:textSize="20sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/lastChatTime"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toTopOf="@+id/avatar"
             app:nameString="@{contact}"
@@ -53,7 +54,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             app:channelImage="@{contact}"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/avatar"
             app:layout_constraintTop_toBottomOf="@+id/fullName"
             tools:src="@drawable/ic_baseline_link_24" />
@@ -61,9 +61,10 @@
 
         <TextView
             android:id="@+id/ourBalance"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:channelBalanceFormatted="@{contact}"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/channelBalanceProgress"
             app:layout_constraintTop_toBottomOf="@+id/fullName"
@@ -94,7 +95,6 @@
             style="?android:attr/progressBarStyle"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:min="0"
             android:max="20000"
             android:indeterminate="false"
             android:progress="@{contact.ourBalanceMSats}"

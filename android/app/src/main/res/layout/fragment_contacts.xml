@@ -25,34 +25,8 @@
             app:layout_constraintBottom_toTopOf="@+id/clear_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/stop_button"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
             tools:listitem="@layout/contact_item" />
-
-        <Button
-            android:id="@+id/start_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin"
-            android:enabled="@{contactsViewModel.startButtonVisible}"
-            android:onClick="@{() -> contactsViewModel.onStartTracking()}"
-            android:text="@string/connect"
-            app:layout_constraintBaseline_toBaselineOf="@id/stop_button"
-            app:layout_constraintEnd_toStartOf="@+id/stop_button"
-            app:layout_constraintHorizontal_chainStyle="spread"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <Button
-            android:id="@+id/stop_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin"
-            android:layout_marginEnd="@dimen/margin"
-            android:enabled="@{contactsViewModel.stopButtonVisible}"
-            android:onClick="@{() -> contactsViewModel.onStopTracking()}"
-            android:text="@string/stop"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/start_button"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/clear_button"
@@ -81,5 +55,53 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:srcCompat="@drawable/ic_baseline_create_24" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="409dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize"
+            android:theme="?attr/actionBarTheme"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/start_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{contactsViewModel.startButtonVisible}"
+            android:onClick="@{() -> contactsViewModel.onStartTracking()}"
+            android:text="@string/connect"
+            app:layout_constraintEnd_toStartOf="@+id/stop_button"
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="@+id/toolbar"
+            app:layout_constraintTop_toTopOf="@id/toolbar"
+            app:layout_constraintBottom_toBottomOf="@id/toolbar"/>
+
+        <Button
+            android:id="@+id/stop_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="@{contactsViewModel.stopButtonVisible}"
+            android:onClick="@{() -> contactsViewModel.onStopTracking()}"
+            android:text="@string/stop"
+            app:layout_constraintBottom_toBottomOf="@id/toolbar"
+            app:layout_constraintEnd_toStartOf="@id/lnd_button"
+            app:layout_constraintStart_toEndOf="@+id/start_button"
+            app:layout_constraintTop_toTopOf="@id/toolbar" />
+
+        <Button
+            android:id="@+id/lnd_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> contactsViewModel.onLND()}"
+            android:text="@{contactsViewModel.lndButtonStatus}"
+            tools:text="UNBOUND"
+            app:layout_constraintBottom_toBottomOf="@id/toolbar"
+            app:layout_constraintEnd_toEndOf="@id/toolbar"
+            app:layout_constraintStart_toEndOf="@+id/stop_button"
+            app:layout_constraintTop_toTopOf="@id/toolbar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
