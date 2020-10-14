@@ -1,3 +1,5 @@
+include ':lndmobile'
 rootProject.name='rusty-android'
+include ':lndmobile'
 include ':app'
 include ':rusty-android-lib'
