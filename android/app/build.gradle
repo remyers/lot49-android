@@ -27,7 +27,7 @@ android {
     ndkVersion "21.3.6528147"
 
     defaultConfig {
-        applicationId "com.example.rusty_android"
+        applicationId "org.globalmeshlabs.lot49"
         minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
@@ -137,7 +137,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     // Rust library
-    implementation project(':rusty-android-lib')
+    implementation project(':rust-android-lib')
 
     // LND from Blixt Wallet
     implementation group: 'com.google.guava', name: 'guava', version: '27.0.1-android'

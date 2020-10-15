@@ -1,5 +1,5 @@
 include ':lndmobile'
-rootProject.name='rusty-android'
+rootProject.name='lot49'
 include ':lndmobile'
 include ':app'
-include ':rusty-android-lib'
+include ':rust-android-lib'

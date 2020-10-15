@@ -10,13 +10,13 @@
 
         <variable
             name="contactsViewModel"
-            type="com.example.rusty_android.contacts.ContactsViewModel" />
+            type="org.globalmeshlabs.lot49.contacts.ContactsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".contacts.ContactsFragment">
+        tools:context="org.globalmeshlabs.lot49.contacts.ContactsFragment">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/contact_list"

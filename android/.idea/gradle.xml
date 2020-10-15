@@ -12,7 +12,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/lndmobile" />
-            <option value="$PROJECT_DIR$/rusty-android-lib" />
+            <option value="$PROJECT_DIR$/rust-android-lib" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

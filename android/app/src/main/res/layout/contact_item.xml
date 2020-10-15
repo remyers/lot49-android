@@ -8,11 +8,11 @@
 
         <variable
             name="contact"
-            type="com.example.rusty_android.database.MeshContact" />
+            type="org.globalmeshlabs.lot49.database.MeshContact" />
 
         <variable
             name="clickListener"
-            type="com.example.rusty_android.contacts.ContactListener" />
+            type="org.globalmeshlabs.lot49.contacts.ContactListener" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

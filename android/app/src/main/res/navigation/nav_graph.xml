@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/ContactsFragment"
-        android:name="com.example.rusty_android.contacts.ContactsFragment"
+        android:name="org.globalmeshlabs.lot49.contacts.ContactsFragment"
         android:label="@string/contacts_fragment_label"
         tools:layout="@layout/fragment_contacts">
 
@@ -18,7 +18,7 @@
     </fragment>
     <fragment
         android:id="@+id/ChatFragment"
-        android:name="com.example.rusty_android.chat.ChatFragment"
+        android:name="org.globalmeshlabs.lot49.chat.ChatFragment"
         android:label="@string/chat_fragment_label"
         tools:layout="@layout/fragment_chat">
         <argument
