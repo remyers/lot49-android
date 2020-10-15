@@ -44,7 +44,7 @@ class ContactsFragment : Fragment() {
 
         binding.lifecycleOwner = this
 
-        // Add an Observer on the state variable for showing a Snackbar message
+        /*// Add an Observer on the state variable for showing a Snackbar message
         // when the CLEAR button is pressed.
         contactsViewModel.showSnackBarEvent.observe(viewLifecycleOwner, Observer {
             if (it == true) { // Observed state is true.
@@ -53,6 +53,23 @@ class ContactsFragment : Fragment() {
                     getString(R.string.cleared_message),
                     Snackbar.LENGTH_SHORT // How long to display the message.
                 ).show()
+                // Reset state to make sure the snackbar is only shown once, even if the device
+                // has a configuration change.
+                contactsViewModel.doneShowingSnackbar()
+            }
+        })*/
+
+        // Add an Observer on the state variable for showing a Snackbar message
+        // when a keysend message is sent.
+        contactsViewModel.showSnackBarEvent.observe(viewLifecycleOwner, Observer {
+            if (it == true) { // Observed state is true.
+                contactsViewModel.getToastText.value?.let { msg ->
+                    Snackbar.make(
+                        requireActivity().findViewById(android.R.id.content),
+                        msg,
+                        Snackbar.LENGTH_SHORT // How long to display the message.
+                    ).show()
+                }
                 // Reset state to make sure the snackbar is only shown once, even if the device
                 // has a configuration change.
                 contactsViewModel.doneShowingSnackbar()

@@ -21,16 +21,13 @@ import android.util.Base64
 import android.util.Log
 import androidx.core.content.ContextCompat
 import com.example.rusty_android.BuildConfig
-import com.google.protobuf.GeneratedMessageLite
-import com.google.protobuf.InvalidProtocolBufferException
+import com.google.protobuf.ByteString
 import com.google.protobuf.MessageLite
 import com.hypertrack.hyperlog.HyperLog
 import com.jakewharton.processphoenix.ProcessPhoenix
 import kotlinx.coroutines.Runnable
 import lnrpc.Rpc
-import lnrpc.Rpc.GetInfoResponse
 import lnrpc.Walletunlocker.GenSeedRequest
-import routerrpc.RouterOuterClass
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -41,12 +38,21 @@ import kotlin.collections.HashMap
 // TODO break this class up
 object LndMobile  {
     private val TAG = "LndMobile"
+
+    // Whatsat types (size, value)
+    public val tlvKeySendRecord: Long = 5482373484 // Reference lnd master constant when available
+    public val tlvMsgRecord: Long    = 34349334 // variable, chat message
+    public val tlvSigRecord: Long    = 34349337 // ~71, signature(sender | recipient | timestamp | msg), DER-encoded ECDSA
+    public val tlvSenderRecord: Long = 34349339 // 33, sender pubkey
+    public val tlvTimeRecord: Long   = 34349343 // 8, timestamp in nano seconds since unix epoch (big endian encoded)
+
     var messenger: Messenger? = null
     var lndMobileServiceBound = false
     private var lndMobileServiceMessenger // The service
             : Messenger? = null
     private val requests =
         HashMap<Int, CompletableFuture<HashMap<String, *>>?>()
+    private var streamResultHandler: ((Bundle) -> Unit)? = null
 
     enum class LndStatus {
         SERVICE_BOUND, PROCESS_STARTED, WALLET_UNLOCKED;
@@ -72,6 +78,41 @@ object LndMobile  {
             constants["STATUS_WALLET_UNLOCKED"] = LndStatus.WALLET_UNLOCKED.flag
             return constants
         }
+
+    fun getTlvMsgRecord(invoice: Rpc.Invoice): Any {
+        for (htlc in invoice.htlcsList) {
+            if (htlc.customRecordsMap.containsKey(tlvMsgRecord)) {
+                val msg = htlc.customRecordsMap[tlvMsgRecord] as ByteString
+                if (msg.isValidUtf8) {
+                    return msg.toStringUtf8()
+                } else {
+                    return msg
+                }
+            }
+        }
+        return ""
+    }
+
+    fun getTlvMsgRecord(payment: Rpc.Payment): Any {
+        for (htlc in payment.htlcsList) {
+            if (htlc.hasRoute()) {
+                for (hop in htlc.route.hopsList)
+                    if (hop.customRecordsMap.containsKey(tlvMsgRecord)) {
+                        val msg = hop.customRecordsMap[tlvMsgRecord] as ByteString
+                        if (msg.isValidUtf8) {
+                            return msg.toStringUtf8()
+                        } else {
+                            return msg
+                        }
+                    }
+            }
+        }
+        return ""
+    }
+
+    fun setStreamResultHandler(handler: ((Bundle) -> Unit)?) {
+        streamResultHandler = handler
+    }
 
     internal class IncomingHandler : Handler() {
 
@@ -109,42 +150,7 @@ object LndMobile  {
                     promise?.complete(params)
                 }
                 LndMobileService.MSG_GRPC_STREAM_RESULT -> {
-
-                    // TODO handle when error is returned
-                    val bytes = bundle["response"] as ByteArray?
-                    val method = bundle["method"] as String?
-                    var b64: String? = ""
-                    if (bytes != null && bytes.isNotEmpty()) {
-                        b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
-                    }
-                    val params: HashMap<String, *> = hashMapOf("data" to b64)
-
-                    HyperLog.i(TAG, "MSG_GRPC_STREAM_RESULT received. response: $b64, method: $method")
-
-                    // TODO translate callback to Kotlin
-                    //getReactApplicationContext()
-                    //    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-                    //    .emit(method, params)
-
-                    if (bytes != null) {
-                        if (method == "SubscribeInvoices") {
-                            val response = Rpc.Invoice.parseFrom(bytes)
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, amtPaidSat: ${response.amtPaidSat}")
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, rHash: ${response.rHash}")
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, rPreimage: ${response.rPreimage}")
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, state: ${response.state}")
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, cltvExpiry: ${response.cltvExpiry}")
-                            HyperLog.i(TAG, "SubscribeInvoices Invoice, settleDate: ${response.settleDate}")
-                        }
-                        else if (method == "RouterSendPaymentV2") {
-                            val response = Rpc.Payment.parseFrom(bytes)
-                            HyperLog.i(TAG, "RouterSendPaymentV2 Payment, status: ${response.status}")
-                            HyperLog.i(TAG, "RouterSendPaymentV2 Payment, preimage: ${response.paymentPreimage}")
-                            HyperLog.i(TAG, "RouterSendPaymentV2 Payment, valueSat: ${response.valueSat}")
-                            HyperLog.i(TAG, "RouterSendPaymentV2 Payment, feeSat: ${response.feeSat}")
-                            HyperLog.i(TAG, "RouterSendPaymentV2 Payment, failureReason: ${response.failureReason}")
-                        }
-                    }
+                    streamResultHandler?.invoke(bundle)
                 }
                 LndMobileService.MSG_CHECKSTATUS_RESPONSE -> {
                     val request = msg.arg1

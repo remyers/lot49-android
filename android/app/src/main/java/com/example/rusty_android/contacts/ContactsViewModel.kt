@@ -1,12 +1,15 @@
 package com.example.rusty_android.contacts
 
 import android.app.Application
+import android.os.Bundle
 import android.util.Base64
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.blixtwallet.LndMobile
+import com.blixtwallet.LndMobile.tlvKeySendRecord
+import com.blixtwallet.LndMobile.tlvMsgRecord
 import com.example.rusty_android.database.ContactDatabaseDao
 import com.example.rusty_android.database.MeshContact
 import com.example.rusty_android.formatContacts
@@ -60,6 +63,8 @@ class ContactsViewModel(
     private var lndNumPendingChannels = MutableLiveData<Int>()
     private var lndNumActiveChannels = MutableLiveData<Int>()
     private var lndNumInactiveChannels = MutableLiveData<Int>()
+
+    private var toastText = MutableLiveData<String>()
 
     val contacts = database.getAllContacts()
 
@@ -138,6 +143,9 @@ class ContactsViewModel(
      */
     val showSnackBarEvent: LiveData<Boolean>
         get() = _showSnackbarEvent
+
+    val getToastText: LiveData<String>
+        get() = toastText
 
     /**
      * Variable that tells the Fragment to navigate to a specific [ChatFragment]
@@ -241,6 +249,87 @@ class ContactsViewModel(
         }
     }
 
+    private fun handleStreamResult(bundle: Bundle) {
+        uiScope.launch {
+            // TODO handle when error is returned
+            val bytes = bundle["response"] as ByteArray?
+            val method = bundle["method"] as String?
+            var b64: String? = ""
+            if (bytes != null && bytes.isNotEmpty()) {
+                b64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+            }
+            val params: HashMap<String, *> = hashMapOf("data" to b64)
+
+            HyperLog.i(
+                TAG,
+                "handleStreamResult, MSG_GRPC_STREAM_RESULT received. response: $b64, method: $method"
+            )
+
+            if (bytes != null) {
+                if (method == "SubscribeInvoices") {
+                    val response = Rpc.Invoice.parseFrom(bytes)
+                    val msg = LndMobile.getTlvMsgRecord(response)
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, state: ${response.state}")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, tlvMsgRecord: $msg")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, amtPaidSat: ${response.amtPaidSat}")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, rHash: ${response.rHash}")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, rPreimage: ${response.rPreimage}")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, cltvExpiry: ${response.cltvExpiry}")
+                    HyperLog.i(TAG, "SubscribeInvoices Invoice, settleDate: ${response.settleDate}")
+
+                    if (response.state == Rpc.Invoice.InvoiceState.SETTLED) {
+                        val newContact = MeshContact()
+
+                        // add a new contact in the database
+                        newContact.name = msg as String // TODO: get alias of sender
+                        newContact.lastChatTimeMilli = System.currentTimeMillis()
+                        newContact.channelId = Random.nextLong(0, 4) // TODO: extract channel ID
+                        newContact.ourBalanceMSats =
+                            Random.nextInt(1000, 50001) // TODO: extract channel balance
+                        newContact.publicKey =
+                            Random.nextBytes(32).toString() // TODO: extract public key of sender
+                        newContact.routingAddress =
+                            Random.nextLong(0, Long.MAX_VALUE) // TODO: extract IP or GID of sender
+                        newContact.lastSeenTimeMilli = System.currentTimeMillis() -
+                                when (Random.nextInt(0, 3)) {
+                                    1 -> ONE_MINUTE_MILLIS * 5
+                                    2 -> ONE_HOUR_MILLIS
+                                    else -> 0
+                                }
+                        insert(newContact)
+                    }
+
+                } else if (method == "RouterSendPaymentV2") {
+                    val response = Rpc.Payment.parseFrom(bytes)
+                    val msg = LndMobile.getTlvMsgRecord(response)
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, status: ${response.status}")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, tlvMsgRecord: $msg")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, paymentHash: ${response.paymentHash}")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, preimage: ${response.paymentPreimage}")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, valueSat: ${response.valueSat}")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, feeSat: ${response.feeSat}")
+                    HyperLog.i(TAG, "RouterSendPaymentV2 Payment, failureReason: ${response.failureReason}")
+
+                    when (response.status) {
+                        Rpc.Payment.PaymentStatus.SUCCEEDED -> {
+                            toastText.value = "Sent '$msg'"
+                        }
+                        Rpc.Payment.PaymentStatus.IN_FLIGHT -> {
+                            toastText.value = "Message in-flight"
+                        }
+                        Rpc.Payment.PaymentStatus.FAILED -> {
+                            toastText.value = "Send Failed"
+                        }
+                        else -> {
+                            toastText.value = "${response.status}"
+                        }
+                    }
+                    _showSnackbarEvent.value = true
+                }
+            }
+        }
+    }
+
     private suspend fun getPendingLndInit(): Boolean {
         return withContext(Dispatchers.IO) {
             val result: CompletableFuture<Boolean> = CompletableFuture()
@@ -277,7 +366,7 @@ class ContactsViewModel(
                         else {
                             // addInvoice(10)
                             // sendPayment("lnbcrt100u1p0c2axwpp53733g3rfllvmnzrncd6mefa0q6eg8q736s44ynwzy4ynlungzxgqdqqcqzpgsp507etncy04yhmy4zfe382l2gzxt3waksnj6tpta4f7gsnamzq3vfs9qy9qsq8a5d0kghmnrdarjlsef0sj6wz49z60n08m3pfn3t9hm4k8z4uz94j7guwxk932v57pj29r2f7h7nl557hdw0lwp6k37x9aw2a25n89cqjevukw")
-                            // sendPayment(13, "0388ff9d435160d03ebb5faca4f0a64eba7346e615d74e01052610328ca57b1445", 40)
+                            sendPayment(1, "0388ff9d435160d03ebb5faca4f0a64eba7346e615d74e01052610328ca57b1445", 40, "what do you want")
                             subscribeInvoices(0,0)
                         }
                         getInfo()
@@ -300,7 +389,6 @@ class ContactsViewModel(
     }
 
     private suspend fun init() {
-
         withContext(Dispatchers.IO) {
             // bind to LndMobileService
             var initResult: CompletableFuture<HashMap<String, *>> = CompletableFuture()
@@ -509,7 +597,7 @@ class ContactsViewModel(
         }
     }
 
-    private suspend fun sendPayment(amt: Long, dest: String, finalCltvDelta: Int) {
+    private suspend fun sendPayment(amt: Long, dest: String, finalCltvDelta: Int, message: String) {
         withContext(Dispatchers.IO) {
             val bytes = dest.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
             val destByteString = ByteString.copyFrom(bytes)
@@ -517,14 +605,14 @@ class ContactsViewModel(
             val preImage = ByteString.copyFrom(preImageBytes)
             val md = MessageDigest.getInstance("SHA-256")
             val hash = ByteString.copyFrom(md.digest(preImageBytes))
-            val keySendType = 5482373484
 
             try {
 
                 val request = RouterOuterClass.SendPaymentRequest.newBuilder()
                     .setDest(destByteString)
                     .setAmt(amt)
-                    .putDestCustomRecords(keySendType, preImage)
+                    .putDestCustomRecords(tlvKeySendRecord, preImage)
+                    .putDestCustomRecords(tlvMsgRecord, ByteString.copyFromUtf8(message))
                     .setPaymentHash(hash)
                     .setFinalCltvDelta(finalCltvDelta)
                     .setNoInflightUpdates(true)
@@ -608,6 +696,8 @@ class ContactsViewModel(
             val result = startLndResult.get()["data"]
             HyperLog.i(TAG, "LndMobile::startLnd, result: $result")
         }
+        val handler: ((Bundle) -> Unit)? = { bundle -> this.handleStreamResult(bundle) }
+        LndMobile.setStreamResultHandler(handler)
     }
 
     /**
@@ -691,7 +781,7 @@ class ContactsViewModel(
             pendingContact.value = null
         }
 
-// Show a snackbar message, because it's friendly.
+        // Show a snackbar message, because it's friendly.
         _showSnackbarEvent.value = true
     }
 
